@@ -1,0 +1,17 @@
+.boggle-board {
+	border: solid 1px red;
+	display: flex;
+	padding: 5px;
+}
+
+.board-row {
+	display: flex;
+	flex-direction: row;
+}
+
+.row-cell {
+	font-size: 24px;
+	height: 20px;
+	width: 20px;
+    padding: 5px;
+}
