@@ -19,8 +19,7 @@ const BoggleBoard = () => {
 		"3": 1,
 		"4": 2,
 		"5": 3,
-		"6": 4,
-		"7": 2,
+		"6": 5,
 	});
 	const [guessed, setGuessed] = useState<Array<string>>([]);
 
@@ -30,6 +29,8 @@ const BoggleBoard = () => {
 	boardRef.current = board;
 	const charRef = useRef<string>();
 	charRef.current = characters;
+	const guessedRef = useRef<Array<string>>();
+	guessedRef.current = guessed;
 
 	//Returns an matrix with characters
 	const generateBoard = (): Array<Array<string>> => {
@@ -69,7 +70,7 @@ const BoggleBoard = () => {
 	};
 
 	//Check if a word is present in the dictionary
-	const checkWord = (word: string, cur: any): boolean => {
+	const checkWord = (word: string, cur): boolean => {
 		// Get the root to start from
 		cur = cur || dict;
 		// Go through every leaf
@@ -98,22 +99,41 @@ const BoggleBoard = () => {
 	};
 
 	function type(e: { keyCode: number; key: string }): void {
-		//  If backspace, delete a letter
-		if (e.keyCode === 8) {
-			if (!wordRef.current) return;
-			let word = wordRef.current.slice(0, currentWord.length - 1);
-			return setCurrentWord(word);
-		}
-		// When user clicks enter, check if the word exists
-		if (e.keyCode === 13) {
-		}
-		//If keyCode is not a letter, return
-		if (e.keyCode < 65 || e.keyCode > 90) return;
-		if (!charRef.current?.includes(e.key)) return;
+		// Create copy of original board for searching and track active letters
 		let boardCopy: Array<Array<string>> = [];
 		boardRef.current?.forEach((row) => {
 			boardCopy.push([...row]);
 		});
+		//  If backspace, delete a letter
+		if (e.keyCode === 8) {
+			if (!wordRef.current) return;
+			let word = wordRef.current.slice(0, currentWord.length - 1);
+			const foundWord = checkAround(boardCopy, word);
+			if (foundWord) setCurrentWord((word) => (word += e.key));
+			return setCurrentWord(word);
+		}
+		// When user clicks enter, check if the word exists
+		if (e.keyCode === 13) {
+			if (!wordRef.current) return;
+			if (wordRef.current.length <= 2) return;
+			if (!checkWord(wordRef.current, dict)) {
+				setCurrentWord("");
+				return resetActive();
+			}
+			let newGuesses = [...guessedRef.current, wordRef.current];
+			setGuessed(newGuesses);
+			let wordPoints = points[wordRef.current.length];
+			if (!points[wordRef.current.length]) {
+				wordPoints = wordRef.current.length * 2;
+			}
+			setScore((score) => (score += wordPoints));
+			setCurrentWord("");
+			return resetActive();
+		}
+		//If keyCode is not a letter, return
+		if (e.keyCode < 65 || e.keyCode > 90) return;
+		if (!charRef.current?.includes(e.key)) return;
+
 		const foundWord = checkAround(boardCopy, wordRef.current + e.key);
 		if (foundWord) setCurrentWord((word) => (word += e.key));
 	}
@@ -160,7 +180,7 @@ const BoggleBoard = () => {
 		return false;
 	}
 
-	function updateActiveLetters(board) {
+	function updateActiveLetters(board: Array<Array<string>>) {
 		for (let i = 0; i < boardSize; i++) {
 			for (let j = 0; j < boardSize; j++) {
 				if (board[i][j] !== "#") {
@@ -174,11 +194,21 @@ const BoggleBoard = () => {
 		let newBoard = generateBoard();
 		setBoard(newBoard);
 		document.body.addEventListener("keydown", type);
+		document.activeElement?.blur();
+	}
+
+	function resetActive() {
+		setActive([
+			["!", "!", "!", "!"],
+			["!", "!", "!", "!"],
+			["!", "!", "!", "!"],
+			["!", "!", "!", "!"],
+		]);
 	}
 
 	useEffect(() => {
-		console.table(active);
-	}, [active]);
+		console.table(guessed);
+	}, [guessed]);
 
 	return (
 		<div>
@@ -192,6 +222,14 @@ const BoggleBoard = () => {
 						active={active[idx]}
 					></BoggleRow>
 				))}
+			</div>
+			<div className="points">{score}</div>
+			<div className="guessed-words">
+				<ul>
+					{guessed.map((guess) => {
+						return <li key={guess}>{guess}</li>;
+					})}
+				</ul>
 			</div>
 		</div>
 	);
