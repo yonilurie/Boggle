@@ -8,7 +8,12 @@ const BoggleBoard = () => {
 	const [board, setBoard] = useState<Array<Array<string>>>([[]]);
 	const [currentWord, setCurrentWord] = useState<string>("");
 	const [characters, setCharacters] = useState<string>("");
-	const [active, setActive] = useState<Array<Array<number>>>([[]]);
+	const [active, setActive] = useState<Array<Array<string>>>([
+		["!", "!", "!", "!"],
+		["!", "!", "!", "!"],
+		["!", "!", "!", "!"],
+		["!", "!", "!", "!"],
+	]);
 	const [score, setScore] = useState<number>(0);
 	const [points] = useState<{ [wordLength: string]: number }>({
 		"3": 1,
@@ -17,6 +22,7 @@ const BoggleBoard = () => {
 		"6": 4,
 		"7": 2,
 	});
+	const [guessed, setGuessed] = useState<Array<string>>([]);
 
 	const wordRef = useRef<string>();
 	wordRef.current = currentWord;
@@ -118,8 +124,8 @@ const BoggleBoard = () => {
 		i: number,
 		j: number,
 		k: number
-	): boolean | undefined => {
-		if (k === word.length) return true;
+	): Array<Array<string>> | boolean | undefined => {
+		if (k === word.length) return board;
 		if (i < 0 || j < 0 || i > board.length - 1 || j > board[0].length - 1)
 			return false;
 		if (board[i][j] === word[k]) {
@@ -135,7 +141,7 @@ const BoggleBoard = () => {
 				checkAroundHelper(board, word, i - 1, j + 1, k + 1) ||
 				checkAroundHelper(board, word, i + 1, j + 1, k + 1)
 			) {
-				return true;
+				return board;
 			}
 			board[i][j] = tmp;
 		}
@@ -144,10 +150,24 @@ const BoggleBoard = () => {
 	function checkAround(board: Array<Array<string>>, word: string): boolean {
 		for (let i = 0; i < board.length; i++) {
 			for (let j = 0; j < board[0].length; j++) {
-				if (checkAroundHelper(board, word, i, j, 0)) return true;
+				if (checkAroundHelper(board, word, i, j, 0)) {
+					updateActiveLetters(board);
+					setActive(board);
+					return true;
+				}
 			}
 		}
 		return false;
+	}
+
+	function updateActiveLetters(board) {
+		for (let i = 0; i < boardSize; i++) {
+			for (let j = 0; j < boardSize; j++) {
+				if (board[i][j] !== "#") {
+					board[i][j] = "!";
+				}
+			}
+		}
 	}
 
 	function startGame() {
@@ -157,8 +177,8 @@ const BoggleBoard = () => {
 	}
 
 	useEffect(() => {
-		console.log(currentWord);
-	}, [currentWord]);
+		console.table(active);
+	}, [active]);
 
 	return (
 		<div>
@@ -166,53 +186,34 @@ const BoggleBoard = () => {
 			<div>{currentWord}</div>
 			<div className="boggle-board">
 				{board.map((row, idx) => (
-					<BoggleRow key={`row ${idx}`} row={row}></BoggleRow>
+					<BoggleRow
+						key={`row ${idx}`}
+						row={row}
+						active={active[idx]}
+					></BoggleRow>
 				))}
 			</div>
 		</div>
 	);
 };
 
-function BoggleRow({ row }: Array<string>) {
+interface Row {
+	row: Array<string>;
+	active: Array<string>;
+}
+
+function BoggleRow({ row, active }: Row) {
 	if (!row.length) return null;
 	return (
 		<div className="boggle-row">
-			<div
-				className={`row-cell ${
-					row.length && row[0] === row[0].toUpperCase()
-						? "active"
-						: ""
-				}`}
-			>
-				{row[0].toUpperCase()}
-			</div>
-			<div
-				className={`row-cell ${
-					row.length && row[1] === row[1].toUpperCase()
-						? "active"
-						: ""
-				}`}
-			>
-				{row[1].toUpperCase()}
-			</div>
-			<div
-				className={`row-cell ${
-					row.length && row[2] === row[2].toUpperCase()
-						? "active"
-						: ""
-				}`}
-			>
-				{row[2].toUpperCase()}
-			</div>
-			<div
-				className={`row-cell ${
-					row.length && row[3] === row[3].toUpperCase()
-						? "active"
-						: ""
-				}`}
-			>
-				{row[3].toUpperCase()}
-			</div>
+			{row.map((cell: string, i: number) => (
+				<div
+					key={`cell ${i}-${"cell"}`}
+					className={`row-cell ${active[i] === "#" ? "active" : ""}`}
+				>
+					{cell.toUpperCase()}
+				</div>
+			))}
 		</div>
 	);
 }
