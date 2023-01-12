@@ -1,53 +1,32 @@
 import "./BoggleBoard.css";
-import { FC, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { dict } from "./dict";
-
-interface BoggleRow {
-	row: Array<string>;
-}
-
-const BoggleRow: FC<BoggleRow> = ({ row }) => {
-	return (
-		<div className="boggle-row">
-			<div className="row-cell">{row[0]}</div>
-			<div className="row-cell">{row[1]}</div>
-			<div className="row-cell">{row[2]}</div>
-			<div className="row-cell">{row[3]}</div>
-		</div>
-	);
-};
+import { dice } from "../../dice";
 
 const BoggleBoard = () => {
 	const [boardSize, setBoardSize] = useState<number>(4);
-	const [boardLetters, setBoardLetters] = useState<Array<Array<string>>>([
-		[],
-	]);
-	const [currWord, setCurrWord] = useState<string>("");
+	const [board, setBoard] = useState<Array<Array<string>>>([[]]);
+	const [currentWord, setCurrentWord] = useState<string>("");
+	const [characters, setCharacters] = useState<string>("");
+	const [active, setActive] = useState<Array<Array<number>>>([[]]);
+	const [score, setScore] = useState<number>(0);
+	const [points] = useState<{ [wordLength: string]: number }>({
+		"3": 1,
+		"4": 2,
+		"5": 3,
+		"6": 4,
+		"7": 2,
+	});
 
-	//Hard coded dice from actual boggle game.
-	//Having random letters chosen from the alphabet makes finding words
-	// much more difficult
-	const dice: Array<Array<string>> = [
-		["t", "o", "u", "m", "i", "c"],
-		["x", "r", "e", "d", "l", "i"],
-		["d", "t", "s", "t", "y", "i"],
-		["a", "b", "o", "j", "b", "o"],
-		["t", "w", "a", "o", "o", "t"],
-		["s", "e", "i", "u", "n", "e"],
-		["t", "v", "w", "r", "h", "e"],
-		["p", "k", "s", "f", "f", "a"],
-		["r", "t", "l", "e", "y", "t"],
-		["h", "i", "qu", "u", "m", "n"],
-		["e", "e", "a", "a", "n", "g"],
-		["z", "h", "n", "l", "r", "n"],
-		["s", "s", "t", "i", "e", "o"],
-		["s", "c", "h", "p", "o", "a"],
-		["r", "e", "y", "d", "l", "v"],
-		["w", "n", "h", "g", "e", "e"],
-	];
+	const wordRef = useRef<string>();
+	wordRef.current = currentWord;
+	const boardRef = useRef<Array<Array<string>>>();
+	boardRef.current = board;
+	const charRef = useRef<string>();
+	charRef.current = characters;
 
 	//Returns an matrix with characters
-	const generateBoard = () => {
+	const generateBoard = (): Array<Array<string>> => {
 		// Create board array
 		let chars = [];
 		// Get random letter from each die and push to array
@@ -55,6 +34,7 @@ const BoggleBoard = () => {
 			let random = Math.floor(Math.random() * 6);
 			chars.push(dice[i][random]);
 		}
+		setCharacters(chars.join(""));
 		// Shuffle the chars
 		// Fisher-Yates Shuffle
 		function shuffle(array: Array<string>): Array<string> {
@@ -111,18 +91,130 @@ const BoggleBoard = () => {
 		return false;
 	};
 
+	function type(e: { keyCode: number; key: string }): void {
+		//  If backspace, delete a letter
+		if (e.keyCode === 8) {
+			if (!wordRef.current) return;
+			let word = wordRef.current.slice(0, currentWord.length - 1);
+			return setCurrentWord(word);
+		}
+		// When user clicks enter, check if the word exists
+		if (e.keyCode === 13) {
+		}
+		//If keyCode is not a letter, return
+		if (e.keyCode < 65 || e.keyCode > 90) return;
+		if (!charRef.current?.includes(e.key)) return;
+		let boardCopy: Array<Array<string>> = [];
+		boardRef.current?.forEach((row) => {
+			boardCopy.push([...row]);
+		});
+		const foundWord = checkAround(boardCopy, wordRef.current + e.key);
+		if (foundWord) setCurrentWord((word) => (word += e.key));
+	}
+
+	const checkAroundHelper = (
+		board: Array<Array<string>>,
+		word: string,
+		i: number,
+		j: number,
+		k: number
+	): boolean | undefined => {
+		if (k === word.length) return true;
+		if (i < 0 || j < 0 || i > board.length - 1 || j > board[0].length - 1)
+			return false;
+		if (board[i][j] === word[k]) {
+			var tmp = board[i][j];
+			board[i][j] = "#";
+			if (
+				checkAroundHelper(board, word, i + 1, j, k + 1) ||
+				checkAroundHelper(board, word, i - 1, j, k + 1) ||
+				checkAroundHelper(board, word, i, j + 1, k + 1) ||
+				checkAroundHelper(board, word, i, j - 1, k + 1) ||
+				checkAroundHelper(board, word, i - 1, j - 1, k + 1) ||
+				checkAroundHelper(board, word, i + 1, j - 1, k + 1) ||
+				checkAroundHelper(board, word, i - 1, j + 1, k + 1) ||
+				checkAroundHelper(board, word, i + 1, j + 1, k + 1)
+			) {
+				return true;
+			}
+			board[i][j] = tmp;
+		}
+	};
+
+	function checkAround(board: Array<Array<string>>, word: string): boolean {
+		for (let i = 0; i < board.length; i++) {
+			for (let j = 0; j < board[0].length; j++) {
+				if (checkAroundHelper(board, word, i, j, 0)) return true;
+			}
+		}
+		return false;
+	}
+
+	function startGame() {
+		let newBoard = generateBoard();
+		setBoard(newBoard);
+		document.body.addEventListener("keydown", type);
+	}
+
 	useEffect(() => {
-		setBoardLetters(generateBoard());
-		document.body.addEventListener("keydown", (e) => console.log(e.key));
-	}, []);
+		console.log(currentWord);
+	}, [currentWord]);
 
 	return (
-		<div className="boggle-board">
-			{boardLetters.map((row, idx) => (
-				<BoggleRow key={`row ${idx}`} row={row}></BoggleRow>
-			))}
+		<div>
+			<button onClick={startGame}>play</button>
+			<div>{currentWord}</div>
+			<div className="boggle-board">
+				{board.map((row, idx) => (
+					<BoggleRow key={`row ${idx}`} row={row}></BoggleRow>
+				))}
+			</div>
 		</div>
 	);
 };
+
+function BoggleRow({ row }: Array<string>) {
+	if (!row.length) return null;
+	return (
+		<div className="boggle-row">
+			<div
+				className={`row-cell ${
+					row.length && row[0] === row[0].toUpperCase()
+						? "active"
+						: ""
+				}`}
+			>
+				{row[0].toUpperCase()}
+			</div>
+			<div
+				className={`row-cell ${
+					row.length && row[1] === row[1].toUpperCase()
+						? "active"
+						: ""
+				}`}
+			>
+				{row[1].toUpperCase()}
+			</div>
+			<div
+				className={`row-cell ${
+					row.length && row[2] === row[2].toUpperCase()
+						? "active"
+						: ""
+				}`}
+			>
+				{row[2].toUpperCase()}
+			</div>
+			<div
+				className={`row-cell ${
+					row.length && row[3] === row[3].toUpperCase()
+						? "active"
+						: ""
+				}`}
+			>
+				{row[3].toUpperCase()}
+			</div>
+		</div>
+	);
+}
 
 export default BoggleBoard;
