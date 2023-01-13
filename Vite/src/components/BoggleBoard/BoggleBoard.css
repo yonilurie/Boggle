@@ -20,3 +20,17 @@
 .row-cell.active {
 	color: red;
 }
+
+.word {
+	list-style: none;
+	font-size: 1.5rem;
+}
+.word.found {
+	color: red;
+}
+
+.guessed-words {
+	height: 300px;
+	overflow-y: scroll;
+}
+
