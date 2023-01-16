@@ -119,7 +119,7 @@ const BoggleBoard = () => {
 	//Find all words on the board
 	// Run nested loop to hit each cell and check if a word can
 	// be formed starting with the letter in the cell
-	const findAllWords = (board): Array<string> => {
+	const findAllWords = (board: Array<Array<string>>): Array<string> => {
 		// Create array for sotring all found words
 		let allWords: Array<string> = [];
 		// Loop through each cell using nested for loops
@@ -207,6 +207,10 @@ const BoggleBoard = () => {
 		if (e.keyCode === 8) {
 			if (!wordRef.current) return;
 			let word = wordRef.current.slice(0, currentWord.length - 1);
+			// To account for the last the last letters being 'Qu'
+			if (word[word.length - 1] === "q") {
+				word = word.slice(0, currentWord.length - 1);
+			}
 			const foundWord = checkAround(boardCopy, word);
 			if (foundWord) setCurrentWord((word) => (word += e.key));
 			return setCurrentWord(word);
@@ -243,6 +247,8 @@ const BoggleBoard = () => {
 		if (e.keyCode < 65 || e.keyCode > 90) return;
 		if (!charRef.current?.includes(e.key)) return;
 		let letter = e.key;
+		// If the key is q
+		if (e.keyCode === 81) letter = "qu";
 		// Find if the users word is on the board.
 		const foundWord = checkAround(boardCopy, wordRef.current + letter);
 		if (foundWord) setCurrentWord((word) => (word += letter));
@@ -260,9 +266,17 @@ const BoggleBoard = () => {
 		if (i < 0 || j < 0 || i > board.length - 1 || j > board[0].length - 1) {
 			return false;
 		}
-		if (board[i][j] === word[k]) {
-			var tmp = board[i][j];
+
+		if (
+			board[i][j] === word[k] ||
+			(word[k] === "q" && board[i][j] === "qu")
+		) {
+			// To account for 'Qu'
+			if (word[k] === "q" && board[i][j] === "qu") k++;
+
+			const tmp = board[i][j];
 			board[i][j] = "#";
+
 			if (
 				checkAroundHelper(board, word, i + 1, j, k + 1) ||
 				checkAroundHelper(board, word, i - 1, j, k + 1) ||
