@@ -11,7 +11,7 @@ export const dice: Array<Array<string>> = [
 	["t", "v", "w", "r", "h", "e"],
 	["p", "k", "s", "f", "f", "a"],
 	["r", "t", "l", "e", "y", "t"],
-	["h", "i", "q", "u", "m", "n"], // Q should be QU
+	["h", "i", "qu", "u", "m", "n"], // Q should be QU
 	["e", "e", "a", "a", "n", "g"],
 	["z", "h", "n", "l", "r", "n"],
 	["s", "s", "t", "i", "e", "o"],

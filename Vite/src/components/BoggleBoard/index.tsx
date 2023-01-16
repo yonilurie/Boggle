@@ -5,7 +5,7 @@ import { dice } from "../../dice";
 
 const BoggleBoard = () => {
 	// Length in seconds.
-	const gameLength: number = 12;
+	const gameLength: number = 10020;
 	// Game board size, n*n dice.
 	const boardSize = 4;
 	// Map of word length to points
@@ -25,6 +25,7 @@ const BoggleBoard = () => {
 	const [score, setScore] = useState<number>(0);
 	const [lastScore, setLastScore] = useState<number>(0);
 	const [timer, setTimer] = useState<number>(0);
+
 	const [timerInterval, setTimerInterval] = useState<number | null>(null);
 	const [start, setStart] = useState<boolean>(false);
 	const [active, setActive] = useState<Array<Array<string>>>([
@@ -78,14 +79,7 @@ const BoggleBoard = () => {
 		}
 		return board;
 	};
-	// Checks Dictionary Trie for word
-	// const checkWord = (word: string, cur: any): boolean => {
-	// 	if (cur[word] && cur[word]["$"] === 0) return true;
-	// 	if (word.length === 0 && cur[`$`] === 0) return true;
-	// 	if (cur[word[0]]) return checkWord(word.slice(1), cur[word[0]]);
-	// 	else if (!cur[word[0]]) return false;
-	// 	else return false;
-	// };
+
 	// Checks Dictionary Trie for valid prefixes
 	const checkPrefix = (word: string, cur: any): boolean => {
 		if (word.length === 0) return true;
@@ -98,22 +92,20 @@ const BoggleBoard = () => {
 		// Get the root to start from
 		cur = cur || dict;
 		// Go through every leaf
-		for (var node in cur) {
+		for (let node in cur) {
 			// If the start of the word matches the leaf
 			if (word.indexOf(node) === 0) {
 				// If it's a number
-				var val =
+				let val =
 					typeof cur[node] === "number" && cur[node]
 						? // Substitute in the removed suffix object
 						  dict.$[cur[node]]
 						: // Otherwise use the current value
 						  cur[node];
-
 				// If this leaf finishes the word
 				if (node.length === word.length) {
 					// Return 'true' only if we've reached a final leaf
 					return val === 0 || val.$ === 0;
-
 					// Otherwise continue traversing deeper
 					// down the tree until we find a match
 				} else {
@@ -121,7 +113,6 @@ const BoggleBoard = () => {
 				}
 			}
 		}
-
 		return false;
 	};
 
@@ -312,9 +303,11 @@ const BoggleBoard = () => {
 	// Starts the game, creates a new random board and a timer
 	function startGame() {
 		//If interval exists, clear it
-		clearInterval(timerInterval);
+		if (timerInterval) clearInterval(timerInterval);
 		setGuessed([]);
 		setAllPossibleWords([]);
+		resetActive();
+		setCurrentWord("");
 		// Generate new board and store in state
 		let newBoard = generateBoard();
 		setBoard(newBoard);
@@ -322,14 +315,6 @@ const BoggleBoard = () => {
 		setAllPossibleWords(allWords.sort());
 		setTimer(gameLength);
 		setStart(true);
-
-		// Add event listener to watch for keystrokes
-		// Remove the event listener after the game ends
-		document.addEventListener("keydown", type);
-		setTimeout(
-			() => document.removeEventListener("keydown", type),
-			gameLength * 1000
-		);
 
 		// Remove focus from 'Play' button
 		document.activeElement?.blur();
@@ -364,6 +349,12 @@ const BoggleBoard = () => {
 		setCurrentWord("");
 	}, [timer]);
 
+	// Add event listener to watch for keystrokes
+	useEffect(() => {
+		window.addEventListener("keydown", type);
+		return () => window.removeEventListener("keydown", type);
+	}, [start]);
+
 	return (
 		<>
 			<button onClick={startGame}>play</button>
@@ -390,8 +381,8 @@ const BoggleBoard = () => {
 					<div>Score: {lastScore}</div>
 
 					<div>
-						You got {guessed.length} / {allPossibleWords.length}{" "}
-						words!
+						You got {guessed.length} out of{" "}
+						{allPossibleWords.length} words!
 					</div>
 				</>
 			)}
