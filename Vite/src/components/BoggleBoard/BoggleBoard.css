@@ -1,3 +1,4 @@
+/*  Boggle board */
 .boggle-board {
 	display: grid;
 	flex-direction: column;
@@ -20,16 +21,20 @@
 
 .row-cell {
 	font-size: 24px;
-	min-height: 25px;
-	min-width: 25px;
+	min-height: 45px;
+	min-width: 45px;
 	padding: 5px;
 	background-color: grey;
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }
 
 .row-cell.active {
-	color: red;
+	color: black;
 }
 
+/*  Words */
 .word {
 	list-style: none;
 	font-size: 1.5rem;
@@ -38,7 +43,22 @@
 	color: red;
 }
 
+.word.current-word {
+	font-size: 2rem;
+	color: red;
+}
+
+.word.current-word-blank {
+	font-size: 2rem;
+	color: red;
+}
+
 .guessed-words {
 	height: 300px;
 	overflow-y: scroll;
+	width: 100%;
+	box-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
+	border: solid 1px grey;
+	border-radius: 8px;
+	padding: 4px;
 }
