@@ -28,7 +28,7 @@ const BoggleBoard = () => {
 	const [score, setScore] = useState<number>(0);
 	const [lastScore, setLastScore] = useState<number>(0);
 	const [timer, setTimer] = useState<number>(0);
-	const [timerInterval, setTimerInterval] = useState<number | null>(null);
+	const [timerInterval, setTimerInterval] = useState<any>(null);
 	const [start, setStart] = useState<boolean>(false);
 	const [active, setActive] = useState<Array<Array<string>>>([
 		["!", "!", "!", "!"],
