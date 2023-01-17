@@ -6,7 +6,7 @@ import { dice } from "../../dice";
 
 const BoggleBoard = () => {
 	// Length in seconds.
-	const gameLength: number = 180;
+	const gameLength: number = 30;
 	// Game board size, n*n dice.
 	const boardSize = 4;
 	// Map of word length to points
@@ -41,12 +41,14 @@ const BoggleBoard = () => {
 	wordRef.current = currentWord;
 	const boardRef = useRef<Array<Array<string>>>();
 	boardRef.current = board;
-	const charRef = useRef<string>();
-	charRef.current = characters;
+	// const charRef = useRef<string>();
+	// charRef.current = characters;
 	const guessedRef = useRef<Array<string>>();
 	guessedRef.current = guessed;
 	const startRef = useRef<boolean>();
 	startRef.current = start;
+	const allPossibleWordsRef = useRef<Array<string>>();
+	allPossibleWordsRef.current = allPossibleWords;
 
 	//Returns an matrix with shuffled characters
 	function generateBoard(): Array<Array<string>> {
@@ -82,12 +84,33 @@ const BoggleBoard = () => {
 		return board;
 	}
 
+	// // Checks Dictionary Trie for valid prefixes
+	// function checkPrefix(word: string, cur: any): boolean {
+	// 	for (let node in cur) {
+	// 		if (word.indexOf(node) === 0) {
+
+	// 		}
+	// 	}
+
+	// 	if (word.length === 0) return true;
+	// 	if (cur[word[0]]) return checkPrefix(word.slice(1), cur[word[0]]);
+	// 	else if (!cur[word[0]]) return false;
+	// 	else return false;
+	// }
 	// Checks Dictionary Trie for valid prefixes
 	function checkPrefix(word: string, cur: any): boolean {
 		if (word.length === 0) return true;
-		if (cur[word[0]]) return checkPrefix(word.slice(1), cur[word[0]]);
-		else if (!cur[word[0]]) return false;
-		else return false;
+		for (let node in cur) {
+			if (word.indexOf(node) === 0) {
+				let val =
+					typeof cur[node] === "number" && cur[node]
+						? dict.$[cur[node]]
+						: cur[node];
+				if (node.length === word.length) return true;
+				return checkPrefix(word.slice(node.length), val);
+			}
+		}
+		return false;
 	}
 
 	function checkWord(word: string, cur: any): boolean {
@@ -227,8 +250,12 @@ const BoggleBoard = () => {
 				setCurrentWord("");
 				return resetActive();
 			}
+
 			// if the word passes these checks but is not a valid word, reset users word
-			if (!checkWord(wordRef.current, dict)) {
+			const wordExists = allPossibleWordsRef.current?.find(
+				(word) => word === wordRef.current
+			);
+			if (!wordExists) {
 				setCurrentWord("");
 				return resetActive();
 			}
@@ -249,7 +276,8 @@ const BoggleBoard = () => {
 		}
 		//If keyCode is not a letter, return
 		if (e.keyCode < 65 || e.keyCode > 90) return;
-		if (!charRef.current?.includes(e.key)) return;
+		// if (!charRef.current?.includes(e.key)) return;
+		if (!characters?.includes(e.key)) return;
 		let letter = e.key;
 		// If the key is q
 		if (e.keyCode === 81) letter = "qu";
@@ -468,7 +496,6 @@ const BoggleBoard = () => {
 			{!start && allPossibleWords.length > 0 && (
 				<>
 					<div>Score: {lastScore}</div>
-
 					<div>
 						You got {guessed.length} out of{" "}
 						{allPossibleWords.length} words!

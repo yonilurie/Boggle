@@ -17,7 +17,6 @@ const Definition: FC<Props> = ({ definition, setShowDefinition }) => {
 		<div className="definition" onClick={() => setShowDefinition(false)}>
 			<div className="definition-word">{definition.word}</div>
 			{definition.meanings.map((word) => {
-				console.log(word);
 				return (
 					<div
 						key={word.definitions[0].definition}
