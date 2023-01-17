@@ -1,8 +1,10 @@
 import "./BoggleBoard.css";
 import { useEffect, useRef, useState } from "react";
-import Definition from "./Definition";
-import { dict } from "./dict";
+import { dict } from "../dict";
 import { dice } from "../../dice";
+import Definition from "./Definition";
+import BoggleRow from "./BoggleRow";
+import Instructions from "../Instructions";
 
 const BoggleBoard = () => {
 	// Length in seconds.
@@ -41,14 +43,14 @@ const BoggleBoard = () => {
 	wordRef.current = currentWord;
 	const boardRef = useRef<Array<Array<string>>>();
 	boardRef.current = board;
-	// const charRef = useRef<string>();
-	// charRef.current = characters;
 	const guessedRef = useRef<Array<string>>();
 	guessedRef.current = guessed;
 	const startRef = useRef<boolean>();
 	startRef.current = start;
 	const allPossibleWordsRef = useRef<Array<string>>();
 	allPossibleWordsRef.current = allPossibleWords;
+	// const charRef = useRef<string>();
+	// charRef.current = characters;
 
 	//Returns an matrix with shuffled characters
 	function generateBoard(): Array<Array<string>> {
@@ -84,19 +86,6 @@ const BoggleBoard = () => {
 		return board;
 	}
 
-	// // Checks Dictionary Trie for valid prefixes
-	// function checkPrefix(word: string, cur: any): boolean {
-	// 	for (let node in cur) {
-	// 		if (word.indexOf(node) === 0) {
-
-	// 		}
-	// 	}
-
-	// 	if (word.length === 0) return true;
-	// 	if (cur[word[0]]) return checkPrefix(word.slice(1), cur[word[0]]);
-	// 	else if (!cur[word[0]]) return false;
-	// 	else return false;
-	// }
 	// Checks Dictionary Trie for valid prefixes
 	function checkPrefix(word: string, cur: any): boolean {
 		if (word.length === 0) return true;
@@ -200,8 +189,7 @@ const BoggleBoard = () => {
 				return true;
 			}
 		}
-
-		const tmp = board[i][j];
+		const removedLetter = board[i][j];
 		board[i][j] = "#";
 		if (
 			findAllWordsHelper(board, word, i + 1, j, found) ||
@@ -215,7 +203,7 @@ const BoggleBoard = () => {
 		) {
 			return true;
 		}
-		board[i][j] = tmp;
+		board[i][j] = removedLetter;
 		return false;
 	}
 
@@ -237,8 +225,11 @@ const BoggleBoard = () => {
 				word = word.slice(0, currentWord.length - 1);
 			}
 			const foundWord = checkAround(boardCopy, word);
-			if (foundWord) setCurrentWord((word) => (word += e.key));
-			return setCurrentWord(word);
+			if (foundWord) {
+				setCurrentWord((word) => (word += e.key));
+			}
+			setCurrentWord(word);
+			return;
 		}
 		// When user clicks enter, check if the word exists
 		if (e.keyCode === 13) {
@@ -248,7 +239,8 @@ const BoggleBoard = () => {
 			// If the word has already been found, reset users word
 			if (guessedRef.current?.find((word) => word === wordRef.current)) {
 				setCurrentWord("");
-				return resetActive();
+				resetActive();
+				return;
 			}
 
 			// if the word passes these checks but is not a valid word, reset users word
@@ -257,12 +249,12 @@ const BoggleBoard = () => {
 			);
 			if (!wordExists) {
 				setCurrentWord("");
-				return resetActive();
+				resetActive();
+				return;
 			}
 			// If the word was correct, add it to the guesses array
 			let newGuesses = [wordRef.current];
 			if (guessedRef.current) newGuesses.push(...guessedRef.current);
-
 			setGuessed(newGuesses);
 			// Calculate the points the word was worth
 			let wordPoints = points[wordRef.current.length];
@@ -276,7 +268,6 @@ const BoggleBoard = () => {
 		}
 		//If keyCode is not a letter, return
 		if (e.keyCode < 65 || e.keyCode > 90) return;
-		// if (!charRef.current?.includes(e.key)) return;
 		if (!characters?.includes(e.key)) return;
 		let letter = e.key;
 		// If the key is q
@@ -299,17 +290,14 @@ const BoggleBoard = () => {
 		if (i < 0 || j < 0 || i > board.length - 1 || j > board[0].length - 1) {
 			return false;
 		}
-
 		if (
 			board[i][j] === word[k] ||
 			(word[k] === "q" && board[i][j] === "qu")
 		) {
 			// To account for 'Qu'
 			if (word[k] === "q" && board[i][j] === "qu") k++;
-
-			const tmp = board[i][j];
+			const removedLetter = board[i][j];
 			board[i][j] = "#";
-
 			if (
 				checkAroundHelper(board, word, i + 1, j, k + 1) ||
 				checkAroundHelper(board, word, i - 1, j, k + 1) ||
@@ -322,7 +310,7 @@ const BoggleBoard = () => {
 			) {
 				return board;
 			}
-			board[i][j] = tmp;
+			board[i][j] = removedLetter;
 		}
 	}
 	// Using nested loops check each cell to see if the word can be formed on the board
@@ -362,10 +350,8 @@ const BoggleBoard = () => {
 		setAllPossibleWords(allWords.sort());
 		setTimer(gameLength);
 		setStart(true);
-
 		// Remove focus from 'Play' button
 		(document.activeElement as HTMLElement).blur();
-
 		// Set timer
 		let interval = setInterval(() => {
 			setTimer((time) => (time -= 1));
@@ -388,18 +374,19 @@ const BoggleBoard = () => {
 			const response = await fetch(
 				`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`
 			);
-			const data = await response.json();
-			if (data.title === "No Definitions Found") {
+			// If there is an error getting the definition from the API, create an error object
+			// This message will be rendered instead of the words definition
+			if (response.status !== 200) {
 				const definitionError = {
 					word: `Oops! Definition for '${word}' not found. Try searching the web.`,
 					meanings: [],
 				};
 				setDefinition(definitionError);
-			} else {
-				setDefinition(data[0]);
 			}
+			// Otherwise set the definition
+			const data = await response.json();
+			setDefinition(data[0]);
 		}
-
 		setShowDefinition(true);
 	}
 
@@ -432,33 +419,17 @@ const BoggleBoard = () => {
 					setShowDefinition={setShowDefinition}
 				></Definition>
 			)}
+			{/* Instructions on start page */}
 			{!start && allPossibleWords.length === 0 && (
-				<section className="instructions">
-					<p className="instructions-header">How to play</p>
-					<p>
-						Try to find as many words as you can before the time
-						runs out!
-					</p>
-					<div className="rules-header">Rules:</div>
-					<ul className="rules-list">
-						<li>
-							Words must be composed of adjacent characters,
-							diagonally, vertically, or horizontally
-						</li>
-						<li>
-							Each individual letter may only be used only once
-							per word
-						</li>
-						<li>Words must be at least 3 letters long</li>
-					</ul>
-					<p>Hint: Try to look for longer words!</p>
-				</section>
+				<Instructions></Instructions>
 			)}
+			{/* Changes text depending on whether a game is currently active */}
 			{start ? (
 				<button onClick={startGame}>New Game</button>
 			) : (
 				<button onClick={startGame}>Play</button>
 			)}
+			{/* The boggle board, timer, and guessed wordss  */}
 			{start && (
 				<div className="game-container">
 					<div>
@@ -475,24 +446,27 @@ const BoggleBoard = () => {
 						<div className="points">Score: {score}</div>
 					</div>
 					<div className="guessed-words">
-						{guessed.map((guess) => {
-							return (
-								<li className="word" key={guess}>
-									{guess}
-								</li>
-							);
-						})}
+						{guessed.map((guess) => (
+							<li className="word" key={guess}>
+								{guess}
+							</li>
+						))}
 					</div>
 				</div>
 			)}
-			{start && currentWord.length > 0 && (
-				<div className="word current-word">
-					{currentWord.toUpperCase()}
-				</div>
+			{/* The users guessed word */}
+			{start && (
+				<>
+					{currentWord.length > 0 ? (
+						<div className="word current-word">
+							{currentWord.toUpperCase()}
+						</div>
+					) : (
+						<div className="word current-word-blank">_____</div>
+					)}
+				</>
 			)}
-			{start && currentWord.length === 0 && (
-				<div className="word current-word-blank">_____</div>
-			)}
+			{/* Once the game is over show all the words that were possible */}
 			{!start && allPossibleWords.length > 0 && (
 				<>
 					<div>Score: {lastScore}</div>
@@ -500,58 +474,26 @@ const BoggleBoard = () => {
 						You got {guessed.length} out of{" "}
 						{allPossibleWords.length} words!
 					</div>
+					<div className="guessed-words">
+						{allPossibleWords.map((word) => {
+							const found = guessed.find(
+								(userWord) => userWord === word
+							);
+							return (
+								<li
+									key={word}
+									className={`word ${found ? "found" : ""}`}
+									onClick={() => getDefinition(word)}
+								>
+									{word}
+								</li>
+							);
+						})}
+					</div>
 				</>
-			)}
-			{!start && allPossibleWords.length > 0 && (
-				<div className="guessed-words">
-					{allPossibleWords.map((word) => {
-						if (guessed.find((userWord) => userWord === word)) {
-							return (
-								<li
-									key={word}
-									className="word found"
-									onClick={() => getDefinition(word)}
-								>
-									{word}
-								</li>
-							);
-						} else {
-							return (
-								<li
-									className="word"
-									key={word}
-									onClick={() => getDefinition(word)}
-								>
-									{word}
-								</li>
-							);
-						}
-					})}
-				</div>
 			)}
 		</>
 	);
 };
-
-interface Row {
-	row: Array<string>;
-	active: Array<string>;
-}
-
-function BoggleRow({ row, active }: Row) {
-	if (!row.length) return null;
-	return (
-		<div className="boggle-row">
-			{row.map((cell: string, i: number) => (
-				<div
-					key={`cell ${i}-${"cell"}`}
-					className={`row-cell ${active[i] === "#" ? "active" : ""}`}
-				>
-					{cell.charAt(0).toUpperCase() + cell.slice(1)}
-				</div>
-			))}
-		</div>
-	);
-}
 
 export default BoggleBoard;
