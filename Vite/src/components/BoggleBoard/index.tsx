@@ -6,7 +6,7 @@ import { dice } from "../../dice";
 
 const BoggleBoard = () => {
 	// Length in seconds.
-	const gameLength: number = 120;
+	const gameLength: number = 180;
 	// Game board size, n*n dice.
 	const boardSize = 4;
 	// Map of word length to points
@@ -394,7 +394,7 @@ const BoggleBoard = () => {
 
 	return (
 		<>
-			<h1>Boggle</h1>
+			<h1 className="title">Boggle</h1>
 			{showDefinition && (
 				<Definition
 					definition={definition}

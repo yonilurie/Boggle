@@ -14,28 +14,23 @@ interface Words {
 
 const Definition: FC<Props> = ({ definition, setShowDefinition }) => {
 	return (
-		<div
-			className="definition-container"
-			onClick={() => setShowDefinition(false)}
-		>
-			<div className="definition">
-				<div className="definition-word">{definition.word}</div>
-				{definition.meanings.map((meaning) => {
-					return (
-						<div
-							key={meaning.definitions[0].definition}
-							className="definition-details"
-						>
-							<div className="definition-part-of-speech">
-								• {meaning.partOfSpeech}
-							</div>
-							<div className="definition-meaning">
-								{meaning.definitions[0].definition}
-							</div>
+		<div className="definition">
+			<div className="definition-word">{definition.word}</div>
+			{definition.meanings.map((meaning) => {
+				return (
+					<div
+						key={meaning.definitions[0].definition}
+						className="definition-details"
+					>
+						<div className="definition-part-of-speech">
+							• {meaning.partOfSpeech}
 						</div>
-					);
-				})}
-			</div>
+						<div className="definition-meaning">
+							{meaning.definitions[0].definition}
+						</div>
+					</div>
+				);
+			})}
 		</div>
 	);
 };
