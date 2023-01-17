@@ -233,7 +233,9 @@ const BoggleBoard = () => {
 				return resetActive();
 			}
 			// If the word was correct, add it to the guesses array
-			let newGuesses = [...guessedRef.current, wordRef.current];
+			let newGuesses = [wordRef.current];
+			if (guessedRef.current) newGuesses.push(...guessedRef.current);
+
 			setGuessed(newGuesses);
 			// Calculate the points the word was worth
 			let wordPoints = points[wordRef.current.length];
@@ -334,7 +336,8 @@ const BoggleBoard = () => {
 		setStart(true);
 
 		// Remove focus from 'Play' button
-		document.activeElement?.blur();
+		(document.activeElement as HTMLElement).blur();
+
 		// Set timer
 		let interval = setInterval(() => {
 			setTimer((time) => (time -= 1));
@@ -455,7 +458,9 @@ const BoggleBoard = () => {
 				</div>
 			)}
 			{start && currentWord.length > 0 && (
-				<div className="word current-word">{currentWord.toUpperCase()}</div>
+				<div className="word current-word">
+					{currentWord.toUpperCase()}
+				</div>
 			)}
 			{start && currentWord.length === 0 && (
 				<div className="word current-word-blank">_____</div>

@@ -9,24 +9,25 @@ interface Props {
 
 interface Words {
 	partOfSpeech: string;
-	definitions: { definition: Array<{ definition: string }> };
+	definitions: Array<{ definition: string }>;
 }
 
 const Definition: FC<Props> = ({ definition, setShowDefinition }) => {
 	return (
-		<div className="definition">
+		<div className="definition" onClick={() => setShowDefinition(false)}>
 			<div className="definition-word">{definition.word}</div>
-			{definition.meanings.map((meaning) => {
+			{definition.meanings.map((word) => {
+				console.log(word);
 				return (
 					<div
-						key={meaning.definitions[0].definition}
+						key={word.definitions[0].definition}
 						className="definition-details"
 					>
 						<div className="definition-part-of-speech">
-							• {meaning.partOfSpeech}
+							• {word.partOfSpeech}
 						</div>
 						<div className="definition-meaning">
-							{meaning.definitions[0].definition}
+							{word.definitions[0].definition}
 						</div>
 					</div>
 				);

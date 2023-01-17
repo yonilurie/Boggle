@@ -1,4 +1,8 @@
-export const dict = {
+interface TreeNode {
+  [key: string]: any // type for unknown keys.
+  children?: TreeNode[] // type for a known property.
+}
+export const dict: TreeNode = {
 	a: {
 		a: {
 			h: { $: 0, s: 0, ed: 0, ing: 0 },
