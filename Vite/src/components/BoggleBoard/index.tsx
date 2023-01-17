@@ -1,11 +1,12 @@
 import "./BoggleBoard.css";
 import { useEffect, useRef, useState } from "react";
+import Definition from "./Definition";
 import { dict } from "./dict";
 import { dice } from "../../dice";
 
 const BoggleBoard = () => {
 	// Length in seconds.
-	const gameLength: number = 10;
+	const gameLength: number = 120;
 	// Game board size, n*n dice.
 	const boardSize = 4;
 	// Map of word length to points
@@ -33,6 +34,8 @@ const BoggleBoard = () => {
 		["!", "!", "!", "!"],
 		["!", "!", "!", "!"],
 	]);
+	const [definition, setDefinition] = useState<any>();
+	const [showDefinition, setShowDefinition] = useState(false);
 
 	const wordRef = useRef<string>();
 	wordRef.current = currentWord;
@@ -339,7 +342,7 @@ const BoggleBoard = () => {
 		setTimerInterval(interval);
 	}
 
-	// Resets the active cells (Highlgihted cells that user has used in their word attempt)
+	// Resets the active cells (Highlighted cells that user has used in their word attempt)
 	function resetActive() {
 		setActive([
 			["!", "!", "!", "!"],
@@ -347,6 +350,26 @@ const BoggleBoard = () => {
 			["!", "!", "!", "!"],
 			["!", "!", "!", "!"],
 		]);
+	}
+
+	async function getDefinition(word: string) {
+		if (!definition || definition.word !== word) {
+			const response = await fetch(
+				`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`
+			);
+			const data = await response.json();
+			if (data.title === "No Definitions Found") {
+				const definitionError = {
+					word: `Oops! Definition for '${word}' not found. Try searching the web.`,
+					meanings: [],
+				};
+				setDefinition(definitionError);
+			} else {
+				setDefinition(data[0]);
+			}
+		}
+
+		setShowDefinition(true);
 	}
 
 	// If the timer has reached zero, end the game and find all possible word combinations
@@ -371,25 +394,22 @@ const BoggleBoard = () => {
 
 	return (
 		<>
+			<h1>Boggle</h1>
+			{showDefinition && (
+				<Definition
+					definition={definition}
+					setShowDefinition={setShowDefinition}
+				></Definition>
+			)}
 			{!start && allPossibleWords.length === 0 && (
-				<div className="instructions">
-					<p>How to play</p>
+				<section className="instructions">
+					<p className="instructions-header">How to play</p>
 					<p>
 						Try to find as many words as you can before the time
 						runs out!
 					</p>
-					<p>3 letters: {points[3]} points</p>
-					<p>4 letters {points[4]} points</p>
-					<p>5 letters: {points[5]} points</p>
-					<p>6 letter: {points[6]} points</p>
-					<p>7+ letters long: 2 points for each letter in the word</p>
-					<p>
-						e.g. 'Sunshine' is 8 letters longs, 8 letters * 2 points
-						= 16 points
-					</p>
-					<p>Hint: Try to look for longer words!</p>
-					<div>Rules:</div>
-					<ul>
+					<div className="rules-header">Rules:</div>
+					<ul className="rules-list">
 						<li>
 							Words must be composed of adjacent characters,
 							diagonally, vertically, or horizontally
@@ -400,7 +420,8 @@ const BoggleBoard = () => {
 						</li>
 						<li>Words must be at least 3 letters long</li>
 					</ul>
-				</div>
+					<p>Hint: Try to look for longer words!</p>
+				</section>
 			)}
 			{start ? (
 				<button onClick={startGame}>New Game</button>
@@ -408,22 +429,33 @@ const BoggleBoard = () => {
 				<button onClick={startGame}>Play</button>
 			)}
 			{start && (
-				<>
-					<div className="boggle-board">
-						{board.map((row, idx) => (
-							<BoggleRow
-								key={`row ${idx}`}
-								row={row}
-								active={active[idx]}
-							></BoggleRow>
-						))}
+				<div className="game-container">
+					<div>
+						<div className="boggle-board">
+							{board.map((row, idx) => (
+								<BoggleRow
+									key={`row ${idx}`}
+									row={row}
+									active={active[idx]}
+								></BoggleRow>
+							))}
+						</div>
+						<div className="timer">{timer} seconds left</div>
+						<div className="points">Score: {score}</div>
 					</div>
-					<div className="timer">{timer} seconds left</div>
-					<div className="points">Score: {score}</div>
-				</>
+					<div className="guessed-words">
+						{guessed.map((guess) => {
+							return (
+								<li className="word" key={guess}>
+									{guess}
+								</li>
+							);
+						})}
+					</div>
+				</div>
 			)}
 			{start && currentWord.length > 0 && (
-				<div className="word current-word">{currentWord}</div>
+				<div className="word current-word">{currentWord.toUpperCase()}</div>
 			)}
 			{start && currentWord.length === 0 && (
 				<div className="word current-word-blank">_____</div>
@@ -438,35 +470,31 @@ const BoggleBoard = () => {
 					</div>
 				</>
 			)}
-			{allPossibleWords.length > 0 && (
+			{!start && allPossibleWords.length > 0 && (
 				<div className="guessed-words">
-					{start
-						? guessed.map((guess) => {
-								return (
-									<li className="word" key={guess}>
-										{guess}
-									</li>
-								);
-						  })
-						: allPossibleWords.map((word) => {
-								if (
-									guessed.find(
-										(userWord) => userWord === word
-									)
-								) {
-									return (
-										<li key={word} className="word found">
-											{word}
-										</li>
-									);
-								} else {
-									return (
-										<li className="word" key={word}>
-											{word}
-										</li>
-									);
-								}
-						  })}
+					{allPossibleWords.map((word) => {
+						if (guessed.find((userWord) => userWord === word)) {
+							return (
+								<li
+									key={word}
+									className="word found"
+									onClick={() => getDefinition(word)}
+								>
+									{word}
+								</li>
+							);
+						} else {
+							return (
+								<li
+									className="word"
+									key={word}
+									onClick={() => getDefinition(word)}
+								>
+									{word}
+								</li>
+							);
+						}
+					})}
 				</div>
 			)}
 		</>
