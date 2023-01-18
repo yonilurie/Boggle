@@ -154,6 +154,18 @@
 	color: black;
 }
 
-a:hover {
-	
+@media screen and (max-width: 800px) {
+	.game-container {
+		flex-direction: column;
+
+		align-items: center;
+	}
+
+	.guessed-words {
+		height: 150px;
+	}
+
+	.title {
+		margin: 15px;
+	}
 }

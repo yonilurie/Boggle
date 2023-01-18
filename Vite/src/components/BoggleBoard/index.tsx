@@ -373,7 +373,7 @@ const BoggleBoard = () => {
 	}
 
 	async function getDefinition(word: string) {
-		if (!definition || definition.word !== word) {
+		if (!definition || (definition && definition.word !== word)) {
 			const response = await fetch(
 				`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`
 			);
@@ -385,10 +385,11 @@ const BoggleBoard = () => {
 					meanings: [],
 				};
 				setDefinition(definitionError);
+			} else {
+				// Otherwise set the definition
+				const data = await response.json();
+				setDefinition(data[0]);
 			}
-			// Otherwise set the definition
-			const data = await response.json();
-			setDefinition(data[0]);
 		}
 		setShowDefinition(true);
 	}
