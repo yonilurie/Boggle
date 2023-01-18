@@ -8,7 +8,7 @@ import Instructions from "../Instructions";
 
 const BoggleBoard = () => {
 	// Length in seconds.
-	const gameLength: number = 30;
+	const gameLength: number = 180;
 	// Game board size, n*n dice.
 	const boardSize = 4;
 	// Map of word length to points
@@ -26,7 +26,7 @@ const BoggleBoard = () => {
 	const [guessed, setGuessed] = useState<Array<string>>([]);
 	const [allPossibleWords, setAllPossibleWords] = useState<Array<string>>([]);
 	const [score, setScore] = useState<number>(0);
-	const [lastScore, setLastScore] = useState<number>(0);
+	const [lastScore, setLastScore] = useState<string>("");
 	const [timer, setTimer] = useState<number>(0);
 	const [timerInterval, setTimerInterval] = useState<any>(null);
 	const [start, setStart] = useState<boolean>(false);
@@ -49,8 +49,8 @@ const BoggleBoard = () => {
 	startRef.current = start;
 	const allPossibleWordsRef = useRef<Array<string>>();
 	allPossibleWordsRef.current = allPossibleWords;
-	// const charRef = useRef<string>();
-	// charRef.current = characters;
+	const charRef = useRef<string>();
+	charRef.current = characters;
 
 	//Returns an matrix with shuffled characters
 	function generateBoard(): Array<Array<string>> {
@@ -263,12 +263,13 @@ const BoggleBoard = () => {
 			}
 			// Adjust the score and reset the users word
 			setScore((score) => (score += wordPoints));
+			setLastScore(`${wordRef.current} + ${wordPoints}`);
 			setCurrentWord("");
 			return resetActive();
 		}
 		//If keyCode is not a letter, return
 		if (e.keyCode < 65 || e.keyCode > 90) return;
-		if (!characters?.includes(e.key)) return;
+		if (!charRef.current?.includes(e.key)) return;
 		let letter = e.key;
 		// If the key is q
 		if (e.keyCode === 81) letter = "qu";
@@ -342,11 +343,13 @@ const BoggleBoard = () => {
 		setGuessed([]);
 		setAllPossibleWords([]);
 		resetActive();
+		setLastScore("");
 		setCurrentWord("");
 		// Generate new board and store in state
 		let newBoard = generateBoard();
 		setBoard(newBoard);
 		let allWords = findAllWords(newBoard);
+		console.table(allWords);
 		setAllPossibleWords(allWords.sort());
 		setTimer(gameLength);
 		setStart(true);
@@ -399,7 +402,7 @@ const BoggleBoard = () => {
 		if (timer > 0) return;
 		if (timerInterval) clearInterval(timerInterval);
 		setStart(false);
-		setLastScore(score);
+		setLastScore("");
 		resetActive();
 		setCurrentWord("");
 	}, [timer]);
@@ -413,6 +416,22 @@ const BoggleBoard = () => {
 	return (
 		<>
 			<h1 className="title">Boggle</h1>
+			<div className="social-links">
+				<a
+					href="https://github.com/yonilurie"
+					target="_blank"
+					referrerPolicy="no-referrer"
+				>
+					<i className="fa-brands fa-github"></i>
+				</a>
+				<a
+					href="https://www.linkedin.com/in/yonilurie/"
+					target="_blank"
+					referrerPolicy="no-referrer"
+				>
+					<i className="fa-brands fa-linkedin-in"></i>
+				</a>
+			</div>
 			{showDefinition && (
 				<Definition
 					definition={definition}
@@ -462,14 +481,14 @@ const BoggleBoard = () => {
 							{currentWord.toUpperCase()}
 						</div>
 					) : (
-						<div className="word current-word-blank">_____</div>
+						<div className="word last-score">{lastScore}</div>
 					)}
 				</>
 			)}
 			{/* Once the game is over show all the words that were possible */}
 			{!start && allPossibleWords.length > 0 && (
 				<>
-					<div>Score: {lastScore}</div>
+					<div>Score: {score}</div>
 					<div>
 						You got {guessed.length} out of{" "}
 						{allPossibleWords.length} words!

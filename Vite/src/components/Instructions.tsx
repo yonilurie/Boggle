@@ -1,7 +1,6 @@
 const Instructions = () => {
 	return (
 		<section className="instructions">
-			<p className="instructions-header">How to play</p>
 			<p>
 				Try to find as many words as you can before the time runs out!
 			</p>
