@@ -8,7 +8,7 @@ import Instructions from "../Instructions";
 
 const BoggleBoard = () => {
 	// Length in seconds.
-	const gameLength: number = 180;
+	const gameLength: number = 10;
 	// Game board size, n*n dice.
 	const boardSize = 4;
 	// Map of word length to points
@@ -401,10 +401,11 @@ const BoggleBoard = () => {
 		resetActive();
 		setCurrentWord("");
 	}, [timer]);
+
+	// Add event listener to watch for keystrokes
 	const userType = (e: { key: string }) => {
 		type(e.key);
 	};
-	// Add event listener to watch for keystrokes
 	useEffect(() => {
 		window.addEventListener("keydown", userType);
 		return () => window.removeEventListener("keydown", userType);
@@ -445,7 +446,7 @@ const BoggleBoard = () => {
 			) : (
 				<button onClick={startGame}>Play</button>
 			)}
-			{/* The boggle board, timer, and guessed wordss  */}
+			{/* The boggle board, timer, and guessed words  */}
 			{start && (
 				<div className="game-container">
 					<div className="board-info-container">
@@ -460,7 +461,6 @@ const BoggleBoard = () => {
 								</div>
 							)}
 						</div>
-
 						<div className="boggle-board">
 							{board.map((row, idx) => (
 								<BoggleRow
@@ -473,7 +473,6 @@ const BoggleBoard = () => {
 						</div>
 						<div className="timer">{timer} seconds left</div>
 						<div className="points">Score: {score}</div>
-
 						<div className="action-buttons">
 							<button
 								className="action-button delete"
@@ -498,7 +497,6 @@ const BoggleBoard = () => {
 					</div>
 				</div>
 			)}
-
 			{/* Once the game is over show all the words that were possible */}
 			{!start && allPossibleWords.length > 0 && (
 				<>
@@ -507,7 +505,7 @@ const BoggleBoard = () => {
 						You got {guessed.length} out of{" "}
 						{allPossibleWords.length} words!
 					</div>
-					<div className="guessed-words">
+					<div className="word-definitions">
 						{allPossibleWords.map((word) => {
 							const found = guessed.find(
 								(userWord) => userWord === word
@@ -515,7 +513,9 @@ const BoggleBoard = () => {
 							return (
 								<li
 									key={word}
-									className={`word ${found ? "found" : ""}`}
+									className={`word ${
+										found ? "found" : ""
+									} definitions`}
 									onClick={() => getDefinition(word)}
 								>
 									{word}
