@@ -448,7 +448,19 @@ const BoggleBoard = () => {
 			{/* The boggle board, timer, and guessed wordss  */}
 			{start && (
 				<div className="game-container">
-					<div>
+					<div className="board-info-container">
+						<div className="word-container">
+							{currentWord.length > 0 ? (
+								<div className="word current-word">
+									{currentWord.toUpperCase()}
+								</div>
+							) : (
+								<div className="word last-score">
+									{lastScore}
+								</div>
+							)}
+						</div>
+
 						<div className="boggle-board">
 							{board.map((row, idx) => (
 								<BoggleRow
@@ -461,12 +473,13 @@ const BoggleBoard = () => {
 						</div>
 						<div className="timer">{timer} seconds left</div>
 						<div className="points">Score: {score}</div>
+
 						<div className="action-buttons">
 							<button
 								className="action-button delete"
 								onClick={() => type("Backspace")}
 							>
-								Delete
+								Back
 							</button>
 							<button
 								className="action-button enter"
@@ -485,18 +498,7 @@ const BoggleBoard = () => {
 					</div>
 				</div>
 			)}
-			{/* The users guessed word */}
-			{start && (
-				<>
-					{currentWord.length > 0 ? (
-						<div className="word current-word">
-							{currentWord.toUpperCase()}
-						</div>
-					) : (
-						<div className="word last-score">{lastScore}</div>
-					)}
-				</>
-			)}
+
 			{/* Once the game is over show all the words that were possible */}
 			{!start && allPossibleWords.length > 0 && (
 				<>
