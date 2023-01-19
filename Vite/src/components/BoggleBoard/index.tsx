@@ -207,17 +207,13 @@ const BoggleBoard = () => {
 		return false;
 	}
 
-	function type(e: {
-		keyCode: number;
-		key: string;
-		stopPropagation: Function;
-	}): void {
+	function type(input: string): void {
 		if (!startRef.current) return;
 		// Create copy of original board for searching and track active letters
 		let boardCopy: Array<Array<string>> = [];
 		boardRef.current?.forEach((row) => boardCopy.push([...row]));
 		//  If backspace, delete a letter
-		if (e.keyCode === 8) {
+		if (input === "Backspace") {
 			if (!wordRef.current) return;
 			let word = wordRef.current.slice(0, currentWord.length - 1);
 			// To account for the last the last letters being 'Qu'
@@ -226,14 +222,14 @@ const BoggleBoard = () => {
 			}
 			const foundWord = checkAround(boardCopy, word);
 			if (foundWord) {
-				setCurrentWord((word) => (word += e.key));
+				setCurrentWord((word) => (word += input));
 			}
 			setCurrentWord(word);
 			return;
 		}
 		// When user clicks enter, check if the word exists
-		if (e.keyCode === 13) {
-			// If there is no word or the length is too short, do nothing
+		if (input === "Enter") {
+			// input there is no word or the length is too short, do nothing
 			if (!wordRef.current) return;
 			if (wordRef.current.length <= 2) return;
 			// If the word has already been found, reset users word
@@ -242,7 +238,6 @@ const BoggleBoard = () => {
 				resetActive();
 				return;
 			}
-
 			// if the word passes these checks but is not a valid word, reset users word
 			const wordExists = allPossibleWordsRef.current?.find(
 				(word) => word === wordRef.current
@@ -268,14 +263,14 @@ const BoggleBoard = () => {
 			return resetActive();
 		}
 		//If keyCode is not a letter, return
-		if (e.keyCode < 65 || e.keyCode > 90) return;
-		if (!charRef.current?.includes(e.key)) return;
-		let letter = e.key;
+		let alphabet = "abcdefghijklmnopqrstuvwxyz";
+		if (!alphabet.includes(input)) return;
+		if (!charRef.current?.includes(input)) return;
 		// If the key is q
-		if (e.keyCode === 81) letter = "qu";
+		if (input === "q") input = "qu";
 		// Find if the users word is on the board.
-		if (checkAround(boardCopy, wordRef.current + letter)) {
-			setCurrentWord((word) => (word += letter));
+		if (checkAround(boardCopy, wordRef.current + input)) {
+			setCurrentWord((word) => (word += input));
 		}
 	}
 
@@ -349,7 +344,6 @@ const BoggleBoard = () => {
 		let newBoard = generateBoard();
 		setBoard(newBoard);
 		let allWords = findAllWords(newBoard);
-		console.table(allWords);
 		setAllPossibleWords(allWords.sort());
 		setTimer(gameLength);
 		setStart(true);
@@ -407,11 +401,13 @@ const BoggleBoard = () => {
 		resetActive();
 		setCurrentWord("");
 	}, [timer]);
-
+	const userType = (e: { key: string }) => {
+		type(e.key);
+	};
 	// Add event listener to watch for keystrokes
 	useEffect(() => {
-		window.addEventListener("keydown", type);
-		return () => window.removeEventListener("keydown", type);
+		window.addEventListener("keydown", userType);
+		return () => window.removeEventListener("keydown", userType);
 	}, [start]);
 
 	return (
@@ -459,11 +455,26 @@ const BoggleBoard = () => {
 									key={`row ${idx}`}
 									row={row}
 									active={active[idx]}
+									userType={type}
 								></BoggleRow>
 							))}
 						</div>
 						<div className="timer">{timer} seconds left</div>
 						<div className="points">Score: {score}</div>
+						<div className="action-buttons">
+							<button
+								className="action-button delete"
+								onClick={() => type("Backspace")}
+							>
+								Delete
+							</button>
+							<button
+								className="action-button enter"
+								onClick={() => type("Enter")}
+							>
+								Enter
+							</button>
+						</div>
 					</div>
 					<div className="guessed-words">
 						{guessed.map((guess) => (
