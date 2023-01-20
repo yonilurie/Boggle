@@ -8,7 +8,7 @@ import Instructions from "../Instructions";
 
 const BoggleBoard = () => {
 	// Length in seconds.
-	const gameLength: number = 1;
+	const gameLength: number = 180;
 	// Game board size, n*n dice.
 	const boardSize = 4;
 	// Map of word length to points
