@@ -8,7 +8,7 @@ import Instructions from "../Instructions";
 
 const BoggleBoard = () => {
 	// Length in seconds.
-	const gameLength: number = 180;
+	const gameLength: number = 1;
 	// Game board size, n*n dice.
 	const boardSize = 4;
 	// Map of word length to points
@@ -89,44 +89,16 @@ const BoggleBoard = () => {
 	// Checks Dictionary Trie for valid prefixes
 	function checkPrefix(word: string, cur: any): boolean {
 		if (word.length === 0) return true;
-		for (let node in cur) {
-			if (word.indexOf(node) === 0) {
-				let val =
-					typeof cur[node] === "number" && cur[node]
-						? dict.$[cur[node]]
-						: cur[node];
-				if (node.length === word.length) return true;
-				return checkPrefix(word.slice(node.length), val);
-			}
-		}
+		if (cur[word[0]] !== undefined)
+			return checkPrefix(word.slice(1), cur[word[0]]);
 		return false;
 	}
 
 	function checkWord(word: string, cur: any): boolean {
 		// Get the root to start from
-		cur = cur || dict;
-		// Go through every leaf
-		for (let node in cur) {
-			// If the start of the word matches the leaf
-			if (word.indexOf(node) === 0) {
-				// If it's a number
-				let val =
-					typeof cur[node] === "number" && cur[node]
-						? // Substitute in the removed suffix object
-						  dict.$[cur[node]]
-						: // Otherwise use the current value
-						  cur[node];
-				// If this leaf finishes the word
-				if (node.length === word.length) {
-					// Return 'true' only if we've reached a final leaf
-					return val === 0 || val.$ === 0;
-					// Otherwise continue traversing deeper
-					// down the tree until we find a match
-				} else {
-					return checkWord(word.slice(node.length), val);
-				}
-			}
-		}
+		if (word.length === 0 && cur["$"] === 0) return true;
+		if (cur[word[0]] === 0 && word.length === 1) return true;
+		if (cur[word[0]]) return checkWord(word.slice(1), cur[word[0]]);
 		return false;
 	}
 
@@ -247,6 +219,7 @@ const BoggleBoard = () => {
 				resetActive();
 				return;
 			}
+
 			// If the word was correct, add it to the guesses array
 			let newGuesses = [wordRef.current];
 			if (guessedRef.current) newGuesses.push(...guessedRef.current);
@@ -344,6 +317,7 @@ const BoggleBoard = () => {
 		let newBoard = generateBoard();
 		setBoard(newBoard);
 		let allWords = findAllWords(newBoard);
+		console.table(allWords);
 		setAllPossibleWords(allWords.sort());
 		setTimer(gameLength);
 		setStart(true);

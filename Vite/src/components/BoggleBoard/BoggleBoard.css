@@ -41,6 +41,7 @@
 	display: flex;
 	gap: 20px;
 	width: 100%;
+	padding: 10px;
 	justify-content: center;
 	align-items: center;
 }
@@ -110,13 +111,24 @@
 
 .guessed-words {
 	height: 300px;
-	overflow-y: scroll;
+	overflow-y: auto;
 	width: 100%;
 	border: solid 1px black;
 	background-color: rgb(239, 239, 239);
 	border-radius: 8px;
-	padding: 4px;
+	padding: 5px;
 	max-width: 200px;
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+}
+::-webkit-scrollbar {
+	border-radius: 8px;
+}
+::-webkit-scrollbar-thumb {
+	background-color: rgb(215, 214, 214);
+	border-radius: 8px;
+	transition: 0.7s;
 }
 
 .guessed-words.definitions {
